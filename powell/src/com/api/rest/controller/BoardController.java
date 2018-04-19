@@ -48,7 +48,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.api.rest.dao.RestAPIService;
 import com.common.DataMap;
 import com.common.Utility;
-
+//2번째
 @SuppressWarnings("unchecked")
 @Controller
 @Path("/Board")

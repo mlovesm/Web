@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration
+    xmlns:log4j="http://jakarta.apache.org/log4j/"
+    debug="false">
+
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %5p [%c] %m%n" />
+        </layout>
+    </appender>
+
+	<appender name="rollingFile" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="C:/LOG/poc.log"/>
+		<param name="Append" value="true"/>
+		<param name="MaxFileSize" value="10MB"/>
+		<param name="MaxBackupIndex" value="10"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %p [%c]-%m%n" />
+		</layout>
+	</appender>
+		
+    <logger name="com.ldcc" additivity="false">
+        <level value="DEBUG"/>
+        <appender-ref ref="console"/>
+		<appender-ref ref="rollingFile"/>
+    </logger>
+    
+    <logger name="java.sql.PreparedStatement" additivity="false">
+    	<level value="debug"/>
+    	<appender-ref ref="console"/>
+
+    </logger>
+	<logger name="org.springframework" additivity="false">
+		<level value="error" />
+		<appender-ref ref="console" />
+	</logger>
+    
+    
+<!-- 
+    <root>
+	    <level value="DEBUG" />
+	    <appender-ref ref="console" />
+	    <appender-ref ref="rollingFile"/>
+	</root> 
+-->
+
+</log4j:configuration>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" 
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="main_server">
+
+	<select id="user_login" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+		SELECT 
+			RTRIM(C001) as USER_ID
+			,UserName as USER_NAME
+			,C003
+			,C004
+			,C005
+			,C006
+			,C007
+			,C008
+			,C009
+			,C010
+			,C011
+		FROM TP0902
+		WHERE C001=#id# AND C002=#password#
+	</select>
+	
+
+	<!-- //////////////////////// 푸시 토큰 데이터 관련 ////////////////////// -->
+	
+	<!-- 토큰 중복 확인 -->
+	<select id="tokenDataCheck" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			SELECT
+				count(*) AS CNT
+			FROM dbo.company_push_info
+			WHERE TOKEN=#token#			
+	</select>
+	
+	<!-- 안드로이드 아이디 중복 확인 -->
+	<select id="AndIDCheck" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			SELECT
+				count(*) AS CNT
+			FROM dbo.company_push_info
+			WHERE AND_ID=#and_id#
+	</select>	
+	
+	<delete id="tokenDataDelete" parameterClass="java.util.HashMap">
+		DELETE FROM dbo.company_push_info
+		WHERE AND_ID=#and_id#
+	</delete>
+	
+	<!-- 토큰정보 갱신 -->
+	<update id="tokenDataUpdate" parameterClass="java.util.HashMap">
+		UPDATE dbo.company_push_info SET
+			TOKEN=#token#
+			,PHONE_NUM=#phone_num#
+			,SABUN_NO=#sabun_no#
+			,TOKEN_DATE=getdate()
+		WHERE AND_ID=#and_id#
+	</update>
+	
+	<!-- 토큰 데이터 저장 -->
+	<insert id="tokenDataInsert" parameterClass="java.util.HashMap">		
+		<selectKey keyProperty="idx" resultClass="int">
+			select
+			ISNULL(max(idx)+1,1) as idx
+			FROM dbo.company_push_info
+		</selectKey>  
+		
+		INSERT INTO dbo.company_push_info
+			(idx
+			,token
+			,push_group
+			,phone_num
+			,token_date
+			,and_id
+			,comp_user_id
+			,comp_id)
+		VALUES(
+			#idx#
+			,#token#
+			,#push_group#
+			,#phone_num#
+			,getdate()
+			,#and_id#
+			,#comp_user_id#
+			,#comp_id#)
+	</insert>
+	
+	<!-- 푸쉬 전송 목록 -->
+	<select id="pushDataList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			*
+		FROM dbo.company_push_info
+		<!-- WHERE comp_user_id='etest' -->
+		WHERE comp_id=#comp_id#
+	</select>
+	
+	<!-- 공통 푸쉬 전송 목록 -->
+	<select id="commonPushDataList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			*
+		FROM dbo.common_push_user
+		<!-- WHERE push_user_id='mun12' -->
+		WHERE comp_id=#comp_id#
+	</select>
+	
+	<!-- 푸시 히스토리 저장 -->
+	<insert id="pushHistoryInsert" parameterClass="java.util.HashMap">		
+		INSERT INTO dbo.company_push_board
+			(comp_id
+			,check_date
+			,chk_no
+			,push_date
+			,comp_user_id
+			,push_state
+			,push_title
+			,push_content)
+		VALUES(
+			#comp_id#
+			,#check_date#
+			,#chk_no#
+			,getDate()
+			,#loginUserId#
+			,#state#
+			,#title#
+			,#message#)
+	</insert>
+	
+	<!-- 미점검 푸시 관련 -->
+	<!-- 푸시 전송 업체 리스트 -->
+	<select id="pushCompanyList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM PUSH_COMPANY()
+	</select>
+	
+	<!-- 푸시 전송 유저 리스트 -->
+	<select id="pushCompanyUserList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM PUSH_COMPANY_FACTORY(#push_company_id#)
+	</select>	
+
+	
+	<!-- 미점검 설비 푸시 대상 목록 -->
+	<select id="uncheckEquipData" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM $comp_database$.dbo.PUSH_CHECK_OVER(#part1_cd#,'')
+	</select>		
+
+</sqlMap>

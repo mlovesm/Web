@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="board">
+
+	<!-- MSDS 목록 -->
+	<select id="msdsInfoList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			A.MSDSID
+			,제품명 AS PD_NM
+			,B.FILE_NM
+			,B.FILE_NM_ORG
+		FROM $comp_database$MSDS A
+		LEFT OUTER JOIN $comp_database$MSDS_BOARD_FILE B ON A.MSDSID=B.MSDSID
+		WHERE B.INDEX_NO=1
+		ORDER BY A.MSDSID
+	</select>
+	
+	
+
+
+</sqlMap>

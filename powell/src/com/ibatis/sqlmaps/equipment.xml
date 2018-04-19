@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" 
+"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="equip">
+
+	<!-- 장치 그룹 리스트 -->
+	<select id="equipGroupList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+			SELECT 
+				A.EGROUP_NO
+				,A.EGROUP_NM
+				,EGROUP_ORD
+				,A.TAG_NO
+				,EGROUP_ETC
+				,A.USE_YN
+			FROM EQUIP_GROUP A
+			RIGHT OUTER JOIN (		
+				SELECT
+					DISTINCT(EGROUP_NO)
+				FROM EQUIP_INFO
+			
+				<isEqual property="pc_type" prepend="where" compareValue="Y">
+					PC_TYPE=#pc_type#
+				</isEqual>
+				
+			) B ON A.EGROUP_NO=B.EGROUP_NO
+
+		<dynamic prepend="where">	
+			<isNotEmpty property="eGroup_no" prepend="and">
+				A.EGROUP_NO=#eGroup_no#
+			</isNotEmpty>
+			<isNotEmpty property="tag_no" prepend="and">
+				A.TAG_NO=#tag_no#
+			</isNotEmpty>			
+		</dynamic>
+		ORDER BY A.EGROUP_ORD
+	</select>
+	
+	<!-- 장치관리 -->
+	<select id="equipmentList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	<![CDATA[
+		SELECT 
+			EQUIP_NO
+			,EGROUP_NO
+			,EQUIP_NM
+			,PC_TYPE
+			,TAG_NO
+			,USE_YN
+			,EQUIP_CNT
+			,SPEC1
+			,SPEC2
+			,COMP_NM
+			,TYPE1
+			,MODEL1
+			,SERIAL1
+			,TDH
+			,CAPA1
+			,MAKER1_NM
+			,MAKER1_DT
+			,TYPE2
+			,MODEL2
+			,SERIAL2
+			,CAPA2
+			,RATED_CURR
+			,MAKER2_NM
+			,MAKER2_DT
+			,TYPE3
+			,SERIAL3
+			,FRAME
+			,MAKER3_NM
+			,RANGE
+			,PACTUATOR
+			,CHECK_TYPE
+			,CHECK_CNT
+			,HIS_USER_ID
+		FROM EQUIP_INFO
+	]]>
+		<dynamic prepend="where">	
+			<isEqual property="pc_type" compareValue="Y" prepend="and">
+				PC_TYPE=#pc_type#
+			</isEqual>		
+			<isNotEmpty property="equip_no" prepend="and">
+				EQUIP_NO=#equip_no#
+			</isNotEmpty>
+			<isNotEmpty property="eGroup_no" prepend="and">
+				EGROUP_NO=#eGroup_no#
+			</isNotEmpty>
+			<isNotEmpty property="tag_no" prepend="and">
+				TAG_NO=#tag_no#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY EQUIP_NM,EQUIP_NO
+	</select>
+	
+	<!-- 장치관리 상세정보 -->
+	<select id="equipmentDetail" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+		<![CDATA[
+			SELECT 
+				EQUIP_NO
+				,EQUIP_NM
+				,B.EGROUP_NO
+				,B.EGROUP_NM
+				,PC_TYPE
+				,A.TAG_NO
+				,A.USE_YN
+				,EQUIP_CNT
+				,SPEC1
+				,SPEC2
+				,COMP_NM
+				,TYPE1
+				,MODEL1
+				,SERIAL1
+				,TDH
+				,CAPA1
+				,MAKER1_NM
+				,MAKER1_DT
+				,TYPE2
+				,MODEL2
+				,SERIAL2
+				,CAPA2
+				,RATED_CURR
+				,MAKER2_NM
+				,MAKER2_DT
+				,TYPE3
+				,SERIAL3
+				,FRAME
+				,MAKER3_NM
+				,RANGE
+				,PACTUATOR
+				,CHECK_TYPE
+				,CHECK_CNT
+				,HIS_USER_ID
+			FROM EQUIP_INFO A
+			LEFT OUTER JOIN EQUIP_GROUP B ON A.EGROUP_NO=B.EGROUP_NO AND B.USE_YN='Y'
+		]]>
+		<dynamic prepend="where">	
+			<isNotEmpty property="equip_no" prepend="and">
+				EQUIP_NO=#equip_no#
+			</isNotEmpty>	
+		</dynamic>
+	</select>
+
+	<!-- 설비이력 정보 -->
+	<select id="equipmentInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM INFO_EQUIP(#equip_no#)
+
+	</select>
+	
+	<!-- 설비이력 리스트 -->
+	<select id="equipmentInfoHistory" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM LIST_EQUIP_FAIL_HIS(#equip_no#,#scheck_date#,#echeck_date#)
+		ORDER BY 1 DESC,2 DESC
+	</select>
+
+</sqlMap>
+

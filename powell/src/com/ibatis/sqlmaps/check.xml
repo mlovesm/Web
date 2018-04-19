@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="check">
+
+	<!-- 점검 마스터 리스트 -->
+	<select id="checkMInfoList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			A.CHECK_DATE
+			,A.CHK_NO
+			,F.MAX_CHECK
+			,A.EGROUP_NO
+			,A.EQUIP_NO
+			,B.EQUIP_NM
+			,CHK_STIME
+			,CHK_ETIME
+			,M_ETC
+			,A.USER_ID
+			,C.UserName AS USER_NM
+			,A.ALL_STATE
+			,A.PC_TYPE
+		FROM CHECK_MINFO A	
+		LEFT OUTER JOIN EQUIP_INFO B ON A.EQUIP_NO=B.EQUIP_NO
+		LEFT OUTER JOIN TP0902 C ON A.USER_ID=C.C001
+		LEFT OUTER JOIN (
+			SELECT
+				CHECK_DATE,
+				CHK_NO,
+				MAX(CHK_STATE) AS MAX_CHECK
+			FROM CHECK_DINFO 
+			GROUP BY CHECK_DATE, CHK_NO
+  		) F ON A.CHECK_DATE = F.CHECK_DATE AND A.CHK_NO = F.CHK_NO		
+		<dynamic prepend="where">
+			<isNotNull property="check_date" prepend="and">
+				A.CHECK_DATE=#check_date#
+			</isNotNull>
+			<isNotNull property="chk_no" prepend="and">
+				A.CHK_NO=#chk_no#
+			</isNotNull>	
+			<isNotNull property="pc_type" prepend="and">
+				A.PC_TYPE=#pc_type#
+			</isNotNull>					
+			<isNotNull property="scheck_date" prepend="and">
+				A.CHECK_DATE BETWEEN #scheck_date# AND #echeck_date#
+			</isNotNull>			
+		</dynamic>
+		ORDER BY A.CHECK_DATE DESC,A.CHK_NO DESC
+	</select>
+
+	<!-- 점검 디테일 리스트 -->
+	<select id="checkDInfoList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			C.EQUIP_NO
+			,A.CHECK_KEY
+			,A.CHECK_NM
+			,B.CHECK_DATE
+			,B.CHK_NO
+			,B.CHK_STATE
+			,B.D_ETC
+			,B.USER_ID
+		FROM EQUIP_CHECK_INFO C
+		LEFT OUTER JOIN BASIC_CHECK_INFO A ON A.CHECK_KEY=C.CHECK_KEY
+		LEFT OUTER JOIN CHECK_MINFO D ON D.CHECK_DATE=#check_date# AND D.CHK_NO=#chk_no# AND C.EQUIP_NO=D.EQUIP_NO
+	  	LEFT OUTER JOIN CHECK_DINFO B ON A.CHECK_KEY=B.CHECK_KEY AND B.CHECK_DATE=D.CHECK_DATE AND B.CHK_NO=D.CHK_NO
+		WHERE C.EQUIP_NO=#equip_no#
+		ORDER BY A.CHECK_KEY
+	</select>
+	
+	
+	<!-- 점검 마스터 작성 -->
+	<insert id="checkMInfoInsert" parameterClass="java.util.HashMap">		
+		<selectKey keyProperty="chk_no" resultClass="java.lang.Integer">
+			select
+			ISNULL(max(CHK_NO)+1,1) as chk_no
+			from CHECK_MINFO
+			WHERE CHECK_DATE=#check_date#
+		</selectKey>
+		INSERT INTO
+		CHECK_MINFO(
+			CHECK_DATE
+			,CHK_NO
+			,EGROUP_NO
+			,EQUIP_NO
+			,CHK_STIME
+			,CHK_ETIME
+			,M_ETC
+			,USER_ID
+			,ALL_STATE
+			,PC_TYPE)
+		VALUES(
+			#check_date#
+			,#chk_no#
+			,#eGroup_no#
+			,#equip_no#
+			,#chk_stime#
+			,#chk_etime#
+			,''
+			,#loginUserId#
+			,#all_state#
+			,#pc_type#)
+	</insert>
+	
+	<!-- 그룹별로 당일 점검한지 체크 -->
+	<select id="getCheckEquipNo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			A.EQUIP_NO
+			,B.USER_ID
+		FROM EQUIP_INFO A
+		LEFT OUTER JOIN CHECK_MINFO B ON A.EQUIP_NO=B.EQUIP_NO AND B.CHECK_DATE=#check_date# AND B.PC_TYPE=#pc_type#
+		where A.EGROUP_NO=#eGroup_no#
+		<isEqual property="pc_type" compareValue="Y" prepend="and">
+			A.PC_TYPE=#pc_type#
+		</isEqual>
+	</select>		
+	
+	<!-- 그룹별로 해당항목 점검 가져오기 -->
+	<select id="getEquipCheckInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			*
+		FROM EQUIP_CHECK_INFO
+		WHERE EQUIP_NO=#equip_no#
+	</select>	
+	
+	<!-- 점검 마스터 수정시 날짜 수정하면 키 가져옴 -->
+	<select id="getSelectChkNo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select
+		ISNULL(max(CHK_NO)+1,1) as chk_no
+		from CHECK_MINFO
+		WHERE CHECK_DATE=#check_date#
+	</select>
+	
+	<!-- 점검 마스터 수정 -->
+	<update id="checkMInfoUpdate" parameterClass="java.util.HashMap">
+			UPDATE
+			CHECK_MINFO SET
+				CHECK_DATE=#check_date#
+				,CHK_NO=#chk_no#
+				,EGROUP_NO=#eGroup_no#
+				,EQUIP_NO=#equip_no#
+				,CHK_STIME=#chk_stime#
+				,CHK_ETIME=#chk_etime#
+			WHERE CHECK_DATE=#key_check_date# AND CHK_NO=#key_chk_no#
+	</update>
+	
+	<!-- 점검 디테일 수정 -->
+	<update id="checkDInfoUpdate" parameterClass="java.util.HashMap">
+			UPDATE
+			CHECK_DINFO SET
+				CHECK_DATE=#check_date#
+				,CHK_NO=#chk_no#
+				,CHK_STATE=#chk_state#
+				,D_ETC=#d_etc#
+			WHERE CHECK_DATE=#key_check_date# AND CHK_NO=#key_chk_no# AND CHECK_KEY=#check_key#
+	</update>	
+	
+	<!-- 점검 마스터 삭제 -->
+	<delete id="checkMInfoDelete" parameterClass="java.util.HashMap">
+		DELETE FROM
+			CHECK_MINFO
+		WHERE CHECK_DATE=#check_date# AND CHK_NO=#chk_no#
+	</delete>
+	
+	<!-- 점검 디테일 삭제 -->
+	<delete id="checkDInfoDelete" parameterClass="java.util.HashMap">
+		DELETE FROM
+			CHECK_DINFO
+		WHERE CHECK_DATE=#check_date# AND CHK_NO=#chk_no#
+	</delete>	
+	
+	<!-- 점검 마스터/디테일 삭제 -->
+	<delete id="checkInfoDelete" parameterClass="java.util.HashMap">
+		BEGIN
+			DELETE FROM
+				CHECK_MINFO
+			WHERE CHECK_DATE=#check_date# AND CHK_NO=#chk_no#;	
+			DELETE FROM
+				CHECK_DINFO
+			WHERE CHECK_DATE=#check_date# AND CHK_NO=#chk_no#;
+		END;
+	</delete>	
+	
+	<!-- 점검 디테일 작성 -->
+	<insert id="checkDInfoInsert" parameterClass="java.util.HashMap">
+		INSERT INTO
+		CHECK_DINFO(
+			CHECK_DATE
+			,CHK_NO
+			,CHECK_KEY
+			,CHK_STATE
+			,D_ETC
+			,USER_ID)
+		VALUES(
+			#check_date#
+			,#chk_no#
+			,#check_key#
+			,#chk_state#
+			,#d_etc#
+			,#loginUserId#)
+	</insert>
+	
+	
+	<!-- 미점검리스트 -->
+	<select id="unCheckList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM LIST_CHECK_OVER('Y')
+		<dynamic>
+			<isNotNull property="equip_no" prepend="where">
+				EQUIP_NO=#equip_no#
+			</isNotNull>
+		</dynamic>		
+	</select>
+	
+	<!-- 점검이상리스트 -->
+	<select id="failCheckList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT * FROM LIST_CHECK_FAIL('2')
+		<dynamic>
+			<isNotNull property="equip_no" prepend="where">
+				EQUIP_NO=#equip_no#
+			</isNotNull>
+		</dynamic>		
+	</select>
+	
+
+</sqlMap>

@@ -57,6 +57,7 @@ public class BoardController {
 	
 	//수정 테스트
 	//세컨추가 테스트
+	
 	private RestAPIService restAPIService;
 
 	public void setrestAPIService(RestAPIService restAPIService) {
